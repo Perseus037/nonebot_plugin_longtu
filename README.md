@@ -125,7 +125,7 @@ dragon，龙龙，龙图：发送一张可爱的龙龙图片
 
 ## 🙏 感谢
 
-饼干 [student_2333](https://github.com/lgc2333) 对于我学习编写插件(从零开始学python)过程中的无私帮助
+饼干 [student_2333] (https://github.com/lgc2333) 耐心的老师，可爱的男娘，对于我学习编写插件(从零开始学python)过程中的无私帮助。
 
 ## 📝 更新日志
 
