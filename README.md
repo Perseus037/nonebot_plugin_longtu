@@ -2,6 +2,8 @@
 
 # nonebot-plugin-longtu
 
+![你变的很二次元.jpg（](Cutelong.jpg)
+
 _✨一个简单的随机发送龙图的nonebot2插件✨_
 
 <img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="python">
