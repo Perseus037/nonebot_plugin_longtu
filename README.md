@@ -1,11 +1,3 @@
-<div align="center">
-  <a href="https://v2.nonebot.dev/store"><img src="docs/nbp_logo.png" width="180" height="180" alt="NoneBotPluginLogo"></a>
-  <br>
-  <p><img src="docs/NoneBotPlugin.svg" width="240" alt="NoneBotPluginText"></p>
-</div>
-
-<div align="center">
-
 # nonebot-plugin-bilichat
 
 _✨nonebot_plugin_longtu✨_
