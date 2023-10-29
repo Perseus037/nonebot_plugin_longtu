@@ -121,11 +121,11 @@ dragon，龙龙，龙图：发送一张可爱的龙龙图片
 
 ## 🙏 感谢
 
-饼干[student_2333](https://github.com/lgc2333) 从零教我写插件(从零教我学python)
+饼干 [student_2333](https://github.com/lgc2333) 从零教我写插件(从零教我学python)
 
-Whike[Whike](https://github.com/Whiked) 提供主要技术支持
+Est [Whike](https://github.com/Whiked) 提供主要技术支持
 
-黑纸折扇[黑纸折扇](https://github.com/Perseus037) 提供服务器和bot进行插件的验证和debug
+[黑纸折扇](https://github.com/Perseus037) 提供服务器和bot进行插件的验证和debug
 
 ## 📝 更新日志
 
