@@ -1,4 +1,4 @@
-# nonebot-plugin-bilichat
+# nonebot-plugin-longtu
 
 _✨nonebot_plugin_longtu✨_
 
