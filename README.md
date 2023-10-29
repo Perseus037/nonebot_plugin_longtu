@@ -109,6 +109,8 @@ plugins = [
 
 dragon，龙龙，龙图：发送一张可爱的龙龙图片
 
+example；<img src="https://github.com/Perseus037/data/blob/master/example02.png" alt="示例" >
+
 
 ## 📞 制作者
 
