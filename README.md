@@ -122,13 +122,13 @@ dragon，龙龙，龙图：发送一张可爱的龙龙图片
 
 ## 🙏 感谢
 
-饼干 [student_2333](https://github.com/lgc2333) 从零教我写插件
+饼干 [student_2333](https://github.com/lgc2333) 对于我学习编写插件(从零开始学python)过程中的无私帮助
 
 ## 📝 更新日志
 
 ### 0.1.2
 
-- 可以使用picMenu插件来在菜单中显示了
+- 可以梦幻联动picMenu插件来在菜单中显示了
 
 ### 0.1.1
 
