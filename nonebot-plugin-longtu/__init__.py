@@ -1,12 +1,23 @@
-from nonebot import on_command
-from nonebot.adapters.onebot.v11 import Bot, MessageEvent, MessageSegment
-from httpx import AsyncClient
-from nonebot.exception import FinishedException
 import random
+
+from httpx import AsyncClient
 from io import BytesIO
+
+from nonebot import on_command
+from nonebot.exception import FinishedException
+from nonebot.adapters.onebot.v11 import Bot, MessageEvent, MessageSegment
+from nonebot.plugin import PluginMetadata
 
 dragon = on_command("dragon", aliases={"龙龙", "龙图"}, priority=5)
 
+__plugin_meta__ = PluginMetadata(
+    name = "龙神",
+    description = "发送dragon，龙龙或者龙图随即发送一张可爱龙龙",
+    usage = "使用命令：dragon，龙龙，龙图",
+    type="application",
+    homepage="https://github.com/Perseus037/nonebot_plugin_longtu",
+    supported_adapters = {"nonebot.adapters.onebot.v11"},
+)
 
 @dragon.handle()
 async def handle_first_receive(bot: Bot, event: MessageEvent):
