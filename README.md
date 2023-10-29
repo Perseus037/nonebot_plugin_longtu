@@ -30,7 +30,8 @@ _✨一个简单的随机发送龙图的nonebot2插件✨_
 
 ## 📖 介绍
 
-从神秘的龙图仓库（）随机发送一张可爱的龙图
+从神秘的龙图仓库（内含1500张精选龙图）中随机发送一张可爱的龙图，包含jpg, png和gif格式。
+ps：攻击性较强，请酌情使用。
 
 ## 💿 安装
 
@@ -109,7 +110,7 @@ plugins = [
 
 dragon，龙龙，龙图：发送一张可爱的龙龙图片
 
-example；<img src="https://github.com/Perseus037/data/blob/master/example02.png" alt="示例" >
+示例：<img src="https://github.com/Perseus037/data/blob/master/example02.png" alt="示例" >
 
 
 ## 📞 制作者
