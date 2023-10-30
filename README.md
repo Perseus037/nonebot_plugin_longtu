@@ -37,9 +37,11 @@ ps：攻击性较强，请酌情使用。
 
 ## 💿 安装
 
-以下提到的方法 任选**其一** 即可
 
-_插件处于开发阶段中，暂未上架 NB 商店，所以请使用包管理器安装_
+插件处于开发阶段中，暂未上架 NB 商店，建议直接将这个插件扔进nonebot2\.venv\Lib\site-packages根目录中
+然后打开 nonebot2 项目根目录下的 `pyproject.toml` 文件, 在 `[tool.nonebot]` 部分的 `plugins` 项里追加写入nonebot_plugin_longtu即可
+
+以下提到的方法 任选**其一** 即可
 
 <!--
 <details open>
