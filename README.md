@@ -132,7 +132,7 @@ ps：现在只有最基础的功能，以后有空的时候会慢慢完善代码
 
 ## 🙏 感谢
 
-饼干 [student_2333] (https://github.com/lgc2333) 饼干 [student_2333] (https://github.com/lgc2333) 对于我学习编写插件和配置qqbot(~~从零开始学python~~)过程中的无私帮助。
+饼干 [student_2333] (https://github.com/lgc2333) 对于我学习编写插件和配置qqbot过程中的无私帮助。
 
 ## 📝 更新日志
 
