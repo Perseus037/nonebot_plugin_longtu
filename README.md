@@ -18,7 +18,6 @@ _✨一个简单的随机发送龙图的nonebot2插件✨_
 
 <a href="./LICENSE">
   <img src="https://img.shields.io/github/license/lgc-NB2Dev/nonebot-plugin-uma.svg" alt="license">
-</a>
 <a href="https://pypi.python.org/pypi/nonebot-plugin-longtu">
 </a>
 
