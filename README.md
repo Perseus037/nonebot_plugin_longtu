@@ -36,7 +36,7 @@ ps：攻击性较强，请酌情使用。
 神秘的龙图仓库：https://git.acwing.com/Est/dragon
 
 ## 💿 安装
-目前只能通过git clone下载使用
+没发包，目前只能通过git clone下载使用
 
 下载完成后将插件文件夹扔进nonebot2\.venv\Lib\site-packages根目录中
 然后打开 nonebot2 项目根目录下的 `pyproject.toml` 文件, 在 `[tool.nonebot]` 部分的 `plugins` 项里追加写入nonebot_plugin_longtu即可
@@ -114,7 +114,7 @@ dragon，龙龙，龙图：发送一张可爱的龙龙图片
 
 示例：<img src="https://github.com/Perseus037/data/blob/master/example02.png" alt="示例" >
 
-ps：现在只有最基础的功能，以后有空的时候会慢慢完善代码，增加储存新龙图，检查重复龙图，龙图仓库内龙图数量增加等功能与更新。
+ps：现在只有最基础的功能，以后有空的时候写点好玩的新功能，增加储存新龙图，检查重复龙图，龙图仓库内龙图数量增加等功能与更新。
 
 ## 📞 制作者
 
