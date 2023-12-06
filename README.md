@@ -4,7 +4,7 @@
 
 ![你变的很二次元.jpg（](Cutelong.jpg)
 
-_✨一个简单的随机发送龙图的nonebot2插件✨_
+_✨一个随机发送龙图的nonebot2插件✨_
 
 <img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="python">
 <a href="https://pdm.fming.dev">
@@ -25,8 +25,8 @@ _✨一个简单的随机发送龙图的nonebot2插件✨_
 
 ## 📖 介绍
 
-一个非常简单的nonebot插件，输入龙龙，龙图和dragon指令后会从神秘的龙图仓库（内含1500张精选龙图）中随机发送一张可爱的龙图。。
-ps：攻击性较强，请酌情使用。
+一个非常简单的nonebot2插件，输入指令后会从神秘的龙图仓库（内含1500张精选龙图）中随机发送一张（~~可爱~~）的龙图.
+ps：攻击性较强，请谨慎使用。
 
 神秘的龙图仓库：https://git.acwing.com/Est/dragon
 
@@ -119,18 +119,13 @@ ps：现在只有最基础的功能，以后有空的时候写点好玩的新功
 
 ### Whike [Whiked] (https://github.com/Whiked)
 
-
 - QQ: 274752001
 
 ## 🙏 感谢
 
-饼干 [student_2333] (https://github.com/lgc2333) 对于我学习编写插件和配置qqbot过程中的无私帮助。
+student_2333 (https://github.com/lgc2333) 对于我学习编写插件和配置qqbot过程中的无私帮助。
 
 ## 📝 更新日志
-
-### 0.1.2
-
-- 可以梦幻联动picMenu插件来在菜单中显示了
 
 ### 0.1.1
 
