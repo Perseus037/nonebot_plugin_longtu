@@ -107,7 +107,7 @@ plugins = [
 
 dragon，龙龙，龙图：发送一张可爱的龙龙图片
 
-示例：<img src="https://github.com/Perseus037/data/blob/master/nonebot_plugin_babattleline%20example.png.png" alt="示例" >
+示例：<img src="https://github.com/Perseus037/data/blob/master/nonebot_plugin_longtu%20example.png" alt="示例" >
 
 ps：现在只有最基础的功能，以后有空的时候写点好玩的新功能，增加储存新龙图，检查重复龙图，龙图仓库内龙图数量增加等功能与更新。
 
