@@ -1,12 +1,13 @@
 import random
 
-from httpx import AsyncClient
+from httpx import AsyncClient, ReadTimeout, ConnectError
 from io import BytesIO
 
 from nonebot import on_command
 from nonebot.exception import FinishedException
 from nonebot.adapters.onebot.v11 import Bot, MessageEvent, MessageSegment
 from nonebot.plugin import PluginMetadata
+from nonebot.log import logger
 
 __version__ = "0.1.0.post4"
 __plugin_meta__ = PluginMetadata(
@@ -47,14 +48,20 @@ async def handle_first_receive(bot: Bot, event: MessageEvent):
                 picbytes = BytesIO(resp.content).getvalue()
                 await dragon.finish(MessageSegment.image(picbytes))
                 break
-                
+
+        except FinishedException:
+            raise
+        
+        except ConnectError:
+            logger.error(f"连接错误：无法访问 {image_url}")
+            continue
+
+        except ReadTimeout:
+            logger.error(f"读取超时：{image_url}")
+            continue    
+
         except Exception as e:
-            if isinstance(e, FinishedException):
-                pass
-                
-            else:
-                print(f"尝试发送图片时出现异常：{e}")
-              
-                if ext == extensions[-1]:
+            logger.error(f"输出异常：{e}")
+            if  ext == extensions[-1]:
                     await dragon.send("龙龙现在出不来了，稍后再试试吧~")
-                  
+            break   
