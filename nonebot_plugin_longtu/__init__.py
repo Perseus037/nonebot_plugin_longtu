@@ -11,7 +11,7 @@ from nonebot.plugin import PluginMetadata
 __version__ = "0.1.0.post3"
 __plugin_meta__ = PluginMetadata(
     name="随机龙图",
-    description="随机发送一张龙图",
+    description="2024年是龙年...我都准备好了",
     usage="使用命令：龙龙，龙图，dragon",
     homepage="https://github.com/Perseus037/nonebot_plugin_longtu",
     type="application",
