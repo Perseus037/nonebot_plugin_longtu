@@ -10,12 +10,13 @@ from nonebot.plugin import PluginMetadata
 
 __version__ = "0.1.0.post1"
 __plugin_meta__ = PluginMetadata(
-    name = "随机龙图",
-    description = "发送dragon，龙龙或者龙图随即发送一张可爱龙龙",
-    usage = "使用命令：dragon，龙龙，龙图",
-    type="application",
+    name="nonebot_plugin_longtu",
+    description="随机发送一张龙图",
+    usage="使用命令：龙龙，龙图，dragon",
     homepage="https://github.com/Perseus037/nonebot_plugin_longtu",
-    supported_adapters = {"nonebot.adapters.onebot.v11"},
+    type="application",
+    config=None,
+    supported_adapters={"~onebot.v11"},
 )
 
 dragon = on_command("dragon", aliases={"龙龙", "龙图"}, priority=5)
