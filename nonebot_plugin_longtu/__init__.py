@@ -8,7 +8,7 @@ from nonebot.exception import FinishedException
 from nonebot.adapters.onebot.v11 import Bot, MessageEvent, MessageSegment
 from nonebot.plugin import PluginMetadata
 
-__version__ = "0.1.0.post1"
+__version__ = "0.1.0.post2"
 __plugin_meta__ = PluginMetadata(
     name="nonebot_plugin_longtu",
     description="随机发送一张龙图",
