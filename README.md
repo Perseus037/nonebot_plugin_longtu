@@ -1,10 +1,9 @@
-<div align="center">
+<div align="center"> 
   
-  <img src="https://github.com/Perseus037/data/raw/master/juangou.jpg" alt="2024年是龙年...我都准备好了" width="280" height="280">
+  <img src="https://github.com/Perseus037/data/blob/master/longtu.png?raw=true" alt="2024年是龙年...我都准备好了" width="280" height="280">
 
 # nonebot-plugin-longtu
 
-![.jpg](Cutelong.jpg)
 
 _✨一个随机发送龙图的nonebot2插件✨_
 
