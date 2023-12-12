@@ -20,10 +20,10 @@ _✨一个随机发送龙图的nonebot2插件✨_
 <a href="./LICENSE">
   <img src="https://img.shields.io/github/license/lgc-NB2Dev/nonebot-plugin-uma.svg" alt="license">
 </a>
-<a href="https://pypi.python.org/pypi/nonebot-plugin-batarot">
+<a href="https://pypi.python.org/pypi/nonebot-plugin-longtu">
   <img src="https://img.shields.io/pypi/v/nonebot-plugin-longtu.svg" alt="pypi">
 </a>
-<a href="https://pypi.org/project/nonebot-plugin-batarot/">
+<a href="https://pypi.org/project/nonebot-plugin-longtu/">
   <img src="https://img.shields.io/pypi/dm/nonebot-plugin-longtu.svg" alt="pypi download">
 </a>
 
