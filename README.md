@@ -38,10 +38,6 @@ ps：攻击性较强，请酌情使用。
 神秘的龙图仓库：https://git.acwing.com/Est/dragon
 
 ## 💿 安装
-没发包，目前只能通过git clone下载使用
-
-下载完成后将插件文件夹扔进nonebot2\.venv\Lib\site-packages根目录中
-然后打开 nonebot2 项目根目录下的 `pyproject.toml` 文件, 在 `[tool.nonebot]` 部分的 `plugins` 项里追加写入nonebot_plugin_longtu即可
 
 <!--
 <details open>
