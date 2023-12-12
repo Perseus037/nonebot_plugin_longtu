@@ -10,7 +10,7 @@ from nonebot.plugin import PluginMetadata
 
 __version__ = "0.1.0.post1"
 __plugin_meta__ = PluginMetadata(
-    name = "龙神",
+    name = "随机龙图",
     description = "发送dragon，龙龙或者龙图随即发送一张可爱龙龙",
     usage = "使用命令：dragon，龙龙，龙图",
     type="application",
