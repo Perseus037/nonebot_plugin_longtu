@@ -117,6 +117,8 @@ plugins = [
 
 dragon，龙龙，龙图：发送一张可爱的龙龙图片
 
+龙图 3：发送三张可爱的龙龙图片
+
 示例：<img src="https://github.com/Perseus037/data/blob/master/nonebot_plugin_longtu%20example.png" alt="示例" >
 
 ## 📞 制作者
