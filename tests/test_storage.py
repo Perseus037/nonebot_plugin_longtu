@@ -5,7 +5,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import httpx
 
@@ -177,6 +177,105 @@ class StorageTests(unittest.IsolatedAsyncioTestCase):
         await other.start()
         self.assertTrue(await other._matches(NAME))
         await other.close()
+
+    async def test_worker_concurrency_and_completion(self):
+        self.config.longtu_startup_delay = 0
+        self.config.longtu_idle_seconds = 0
+        self.config.longtu_download_interval = 0
+        self.store.index = {f"dragon_{i}_.gif": ENTRY for i in range(10)}
+        active = peak = 0
+        async def fetch(name):
+            nonlocal active, peak
+            active += 1
+            peak = max(peak, active)
+            try:
+                await asyncio.sleep(0.01)
+                return IMAGE
+            finally:
+                active -= 1
+        with patch.object(self.store, "_fetch", side_effect=fetch):
+            await asyncio.wait_for(self.store._worker(), 3)
+        self.assertEqual(peak, 3)
+        self.assertEqual(len(self.store.local), 10)
+
+    async def test_only_failed_images_retried(self):
+        self.config.longtu_startup_delay = 0
+        self.config.longtu_idle_seconds = 0
+        self.config.longtu_download_interval = 0
+        names = [f"dragon_{i}_.gif" for i in range(6)]
+        self.store.index = dict.fromkeys(names, ENTRY)
+        attempts = dict.fromkeys(names, 0)
+        async def download(name):
+            attempts[name] += 1
+            return name != names[0] or attempts[name] > 1
+        sleeps = []
+        real_sleep = asyncio.sleep
+        async def fast_sleep(delay):
+            sleeps.append(delay)
+            await real_sleep(0)
+        with patch.object(self.store, "_download", side_effect=download), patch.object(storage.asyncio, "sleep", side_effect=fast_sleep):
+            await self.store._worker()
+        self.assertEqual(attempts[names[0]], 2)
+        self.assertTrue(all(attempts[n] == 1 for n in names[1:]))
+        self.assertIn(5, sleeps)
+
+    async def test_outage_exponential_backoff_is_capped(self):
+        self.config.longtu_startup_delay = 0
+        self.config.longtu_idle_seconds = 0
+        self.config.longtu_download_interval = 0
+        sleeps = []
+        real_sleep = asyncio.sleep
+        async def fast_sleep(delay):
+            sleeps.append(delay)
+            await real_sleep(0)
+        with patch.object(self.store, "_download", new=AsyncMock(side_effect=[False] * 6 + [True])), patch.object(storage.asyncio, "sleep", side_effect=fast_sleep):
+            await self.store._worker()
+        self.assertEqual([s for s in sleeps if s], [5, 10, 20, 40, 60, 60])
+
+    async def test_foreground_stops_next_batch(self):
+        self.config.longtu_startup_delay = 0
+        self.config.longtu_idle_seconds = 0
+        self.config.longtu_download_interval = 0
+        self.store.index = {f"dragon_{i}_.gif": ENTRY for i in range(6)}
+        first_batch = asyncio.Event()
+        release = asyncio.Event()
+        calls = []
+        async def fetch(name):
+            calls.append(name)
+            if len(calls) == 3:
+                first_batch.set()
+            await release.wait()
+            return IMAGE
+        with patch.object(self.store, "_fetch", side_effect=fetch):
+            self.store.task = asyncio.create_task(self.store._worker())
+            await asyncio.wait_for(first_batch.wait(), 1)
+            async with self.store.foreground():
+                release.set()
+                await asyncio.sleep(0.05)
+                self.assertEqual(len(calls), 3)
+            await asyncio.wait_for(self.store.task, 2)
+        self.assertEqual(len(calls), 6)
+
+    async def test_shutdown_cancels_inflight_batch(self):
+        self.config.longtu_startup_delay = 0
+        self.config.longtu_idle_seconds = 0
+        self.store.index = {f"dragon_{i}_.gif": ENTRY for i in range(6)}
+        started = asyncio.Event()
+        active = 0
+        async def fetch(name):
+            nonlocal active
+            active += 1
+            if active == 3:
+                started.set()
+            try:
+                await asyncio.Event().wait()
+            finally:
+                active -= 1
+        with patch.object(self.store, "_fetch", side_effect=fetch):
+            self.store.task = asyncio.create_task(self.store._worker())
+            await asyncio.wait_for(started.wait(), 1)
+            await self.store.close()
+        self.assertEqual(active, 0)
 
 
 if __name__ == "__main__":

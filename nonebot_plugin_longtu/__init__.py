@@ -10,7 +10,7 @@ from nonebot.plugin import PluginMetadata
 from .config import Config
 from .storage import ImageStore
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 __plugin_meta__ = PluginMetadata(
     name="随机龙图",
     description="随机发送龙图，支持远程图片和本地渐进缓存",

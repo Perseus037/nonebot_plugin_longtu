@@ -99,8 +99,11 @@ class ImageStore:
     async def start(self):
         self.client = httpx.AsyncClient(
             follow_redirects=True, timeout=self.config.longtu_timeout,
-            limits=httpx.Limits(max_connections=2, max_keepalive_connections=2),
-            headers={"User-Agent": "nonebot-plugin-longtu/0.2.0"},
+            limits=httpx.Limits(
+                max_connections=self.config.longtu_download_concurrency + 2,
+                max_keepalive_connections=self.config.longtu_download_concurrency + 2,
+            ),
+            headers={"User-Agent": "nonebot-plugin-longtu/0.2.1"},
         )
         if self.config.longtu_mode == "local":
             await offload(self._scan)
@@ -201,30 +204,43 @@ class ImageStore:
             return True
         return False
 
+    async def _download(self, name):
+        try:
+            payload = await self._fetch(name)
+            await self._save(name, payload)
+            return self.verified.get(name) == self.index[name]["sha"]
+        except (httpx.HTTPError, OSError, ValueError) as exc:
+            logger.warning(f"龙图后台下载失败：{name}，{type(exc).__name__}")
+            return False
+
     async def _worker(self):
         await asyncio.sleep(self.config.longtu_startup_delay)
-        while self.writable:
-            await self._idle()
+        pending = list(self.index)
+        retry_delay = 5
+        width = self.config.longtu_download_concurrency
+        while pending and self.writable:
+            retry = []
             downloaded = 0
-            failed = False
-            for name in list(self.index):
+            for offset in range(0, len(pending), width):
                 await self._idle()
                 if not self.writable:
                     return
-                if await self._matches(name):
+                batch = []
+                for name in pending[offset:offset + width]:
+                    if not await self._matches(name):
+                        batch.append(name)
+                if not batch:
                     continue
-                try:
-                    payload = await self._fetch(name)
-                    await self._save(name, payload)
-                    downloaded += 1
-                except (httpx.HTTPError, OSError, ValueError) as exc:
-                    logger.warning(f"龙图后台下载暂停后重试：{type(exc).__name__}")
-                    failed = True
-                    await asyncio.sleep(60)
-                    continue
-                await asyncio.sleep(self.config.longtu_download_interval)
-            else:
-                logger.info(f"龙图后台同步本轮结束，新增/更新={downloaded}，本地图={len(self.local)}，待重试={failed}")
-                if not failed:
-                    return
-                await asyncio.sleep(60)
+                await self._idle()
+                results = await asyncio.gather(*(self._download(name) for name in batch))
+                failed = [name for name, ok in zip(batch, results) if not ok]
+                retry.extend(failed)
+                downloaded += sum(results)
+                if failed:
+                    await asyncio.sleep(retry_delay)
+                    retry_delay = min(retry_delay * 2, 60)
+                else:
+                    retry_delay = 5
+                    await asyncio.sleep(self.config.longtu_download_interval)
+            logger.info(f"龙图后台同步本轮结束，新增/更新={downloaded}，本地图={len(self.local)}，待重试={len(retry)}")
+            pending = retry
