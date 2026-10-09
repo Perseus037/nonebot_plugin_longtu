@@ -27,13 +27,15 @@ homepage = "https://github.com/Perseus037/nonebot_plugin_longtu/"
 
 [project.optional-dependencies]
 menu = ["nonebot-plugin-PicMenu>=0.2"]
+test = ["nonebot2[fastapi]>=2.1.1"]
 
 [tool.pdm.version]
 source = "file"
 path = "nonebot_plugin_longtu/__init__.py"
 
 [tool.pdm.build]
-includes = []
+includes = ["nonebot_plugin_longtu/"]
+excludes = ["nonebot_plugin_longtu/images/", "**/__pycache__/**"]
 
 [build-system]
 requires = ["pdm-backend"]

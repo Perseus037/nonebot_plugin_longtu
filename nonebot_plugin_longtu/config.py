@@ -1,9 +1,17 @@
-from pydantic import BaseModel, Extra
-from nonebot import get_driver
+from pathlib import Path
+from typing import Literal
 
-class Config(BaseModel, extra=Extra.ignore):
-    max_dragons: int = 5  
+from pydantic import BaseModel, Field
 
-config = get_driver().config
-dragon_config: Config = Config.parse_obj(config.dict(exclude_unset=True))
-max_dragons = dragon_config.max_dragons
+
+class Config(BaseModel):
+    max_dragons: int = Field(5, ge=1, le=50)
+    longtu_mode: Literal["local", "remote"] = "local"
+    longtu_local_dir: Path = Path(__file__).resolve().parent / "images"
+    longtu_auto_download: bool = True
+    longtu_remote_fallback: bool = True
+    longtu_download_interval: float = Field(5.0, ge=1)
+    longtu_idle_seconds: float = Field(30.0, ge=0)
+    longtu_startup_delay: float = Field(60.0, ge=0)
+    longtu_timeout: float = Field(8.0, gt=0, le=60)
+    longtu_request_timeout: float = Field(20.0, gt=0, le=120)

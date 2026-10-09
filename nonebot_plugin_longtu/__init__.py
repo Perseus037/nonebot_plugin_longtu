@@ -1,88 +1,54 @@
-import os
+import asyncio
 import re
-import random
-from io import BytesIO
+import time
 
-from httpx import AsyncClient, ReadTimeout, ConnectError
-
-from nonebot import on_command
-from nonebot.exception import FinishedException
-from nonebot.adapters.onebot.v11 import Bot, MessageEvent, MessageSegment
-from nonebot.plugin import PluginMetadata
+from nonebot import get_driver, on_command
+from nonebot.adapters.onebot.v11 import MessageEvent, MessageSegment
 from nonebot.log import logger
+from nonebot.plugin import PluginMetadata
 
-try:
-    from .config import max_dragons as CFG_MAX_DRAGONS
-except Exception:
-    CFG_MAX_DRAGONS = None
+from .config import Config
+from .storage import ImageStore
 
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 __plugin_meta__ = PluginMetadata(
     name="随机龙图",
-    description="2024年是龙年...我都准备好了",
-    usage="使用命令：龙龙，龙图，dragon（可加数量，如“龙图 3”）",
+    description="随机发送龙图，支持远程图片和本地渐进缓存",
+    usage="龙龙、龙图、dragon（可加数量，如“龙图 3”）",
     homepage="https://github.com/Perseus037/nonebot_plugin_longtu",
     type="application",
-    config=None,
+    config=Config,
     supported_adapters={"~onebot.v11"},
 )
 
+config = Config(**get_driver().config.dict())
+store = ImageStore(config)
+get_driver().on_startup(store.start)
+get_driver().on_shutdown(store.close)
 dragon = on_command("dragon", aliases={"龙龙", "龙图"}, priority=5, block=True)
 
 
 @dragon.handle()
-async def handle_first_receive(bot: Bot, event: MessageEvent):
-    base_url = "https://raw.githubusercontent.com/Whiked/Dragonimg/main/drimg/"
-    extensions = [".jpg", ".png", ".gif"]
-    total_images = 1516
-
-    text = event.message.extract_plain_text().strip()
-    m = re.search(r"\b(\d{1,2})\b", text)
-    try:
-        req_n = int(m.group(1)) if m else 1
-    except Exception:
-        req_n = 1
-
-    limit = CFG_MAX_DRAGONS if isinstance(CFG_MAX_DRAGONS, int) else int(os.getenv("MAX_DRAGONS", "5"))
-    n = max(1, min(req_n, limit))
-
+async def handle_first_receive(event: MessageEvent):
+    match = re.search(r"\b(\d+)\b", event.message.extract_plain_text())
+    count = min(int(match.group(1)[:6]), config.max_dragons) if match else 1
+    count = max(1, count)
     sent = 0
-    tried = 0
-    while sent < n and tried < n * 4:
-        selected_image_number = random.randint(1, total_images)
-        got_one = False
-
-        for ext in extensions:
-            image_url = f"{base_url}dragon_{selected_image_number}_{ext}"
+    used = set()
+    remaining = config.longtu_request_timeout
+    async with store.foreground():
+        for _ in range(count):
+            started = time.monotonic()
             try:
-                async with AsyncClient(follow_redirects=True) as client:
-                    resp = await client.get(image_url, timeout=8.0)
-
-                if resp.status_code == 200 and resp.content:
-                    picbytes = BytesIO(resp.content).getvalue()
-                    if sent < n - 1:
-                        await dragon.send(MessageSegment.image(picbytes))
-                    else:
-                        await dragon.finish(MessageSegment.image(picbytes))
-                    sent += 1
-                    got_one = True
-                    break
-
-            except FinishedException:
-                raise
-            except ConnectError:
-                logger.error(f"连接错误：无法访问 {image_url}")
-                continue
-            except ReadTimeout:
-                logger.error(f"读取超时：{image_url}")
-                continue
-            except Exception as e:
-                logger.error(f"输出异常：{e}")
-                continue
-
-        tried += 1
-        if not got_one:
-            continue
-
+                name, payload = await asyncio.wait_for(store.get_image(used), remaining)
+            except (OSError, ValueError, asyncio.TimeoutError) as exc:
+                logger.warning(f"龙图资源读取失败：{type(exc).__name__}")
+                break
+            remaining -= time.monotonic() - started
+            used.add(name)
+            await dragon.send(MessageSegment.image(payload))
+            sent += 1
+            if remaining <= 0:
+                break
     if sent == 0:
         await dragon.send("龙龙现在出不来了，稍后再试试吧~")

@@ -80,7 +80,7 @@ pdm add nonebot-plugin-longtu
 <summary>poetry</summary>
 
 ```bash
-poetry add nonebot-plugin-uma
+poetry add nonebot-plugin-longtu
 ```
 
 </details>
@@ -112,6 +112,51 @@ plugins = [
 |            配置项            | 必填 | 默认值  |                                         说明                                          |
 | :--------------------------: | :--: | :-----: | :-----------------------------------------------------------------------------------: |
 |        `MAX_DRAGONS`         |  否  | `5`  |                              一次最大发送龙图的数量                              |
+| `LONGTU_MODE` | 否 | `local` | `local` 优先本地图；`remote` 每次从远程取图，不写本地缓存 |
+| `LONGTU_LOCAL_DIR` | 否 | 插件目录下的 `images` | 本地图片目录，支持绝对路径；相对路径基于 bot 启动目录 |
+| `LONGTU_AUTO_DOWNLOAD` | 否 | `true` | 本地模式下，在后台逐渐补齐图片库 |
+| `LONGTU_REMOTE_FALLBACK` | 否 | `true` | 本地没有可用图片时尝试远程取图，并缓存成功下载的图片 |
+| `LONGTU_DOWNLOAD_INTERVAL` | 否 | `5` | 后台每张图片下载后的等待秒数，至少 1 秒 |
+| `LONGTU_IDLE_SECONDS` | 否 | `30` | 龙图请求结束后等待多久再继续后台下载 |
+| `LONGTU_STARTUP_DELAY` | 否 | `60` | 启动后延迟多少秒开始后台同步 |
+| `LONGTU_TIMEOUT` | 否 | `8` | 单次 HTTP 操作超时秒数 |
+| `LONGTU_REQUEST_TIMEOUT` | 否 | `20` | 一次命令读取图片的累计等待上限秒数，不含 QQ 发送耗时 |
+
+### 默认本地模式
+
+不添加配置即可使用。首次没有图片时可以远程取图，后台单文件逐步补库；已经有本地图时，只从现有图片中随机抽取，无需等整个仓库下载完成。一次命令在图片数量足够时不会重复抽取。
+
+“空闲”指没有龙图请求正在处理，且距离最近一次龙图请求结束超过指定时间，不是检测整机 CPU 或整个群是否安静。已发起的单次后台下载会完成，后续下载等待前台请求结束。按默认 5 秒间隔，1516 张图片仅间隔就约需 2.1 小时；网络、使用频率和失败重试会延长耗时。
+
+内置 `index.json` 固定记录 1516 张图片的真实文件名、大小和 Git blob 校验值。随机取图与后台下载共用这份索引，不查询 GitHub API，不需要 token，也不会猜测文件后缀。下载失败至少等待 60 秒再继续，重启后跳过已完整保存的图片；全部下载完成后后台任务退出，不持续轮询。下载使用临时文件并校验后替换，不自动删除本地图。图片只在使用时读入内存，不把整个图库常驻内存。
+
+自定义目录示例：
+
+```dotenv
+LONGTU_MODE=local
+LONGTU_LOCAL_DIR="./data/longtu"
+```
+
+也可以下载 [Dragonimg](https://github.com/Whiked/Dragonimg) 的 ZIP，将 `drimg` 内图片放入该目录，保持文件名不变。启动时仅收录本层索引内的图片；运行期间手动补入图片后重启 bot。默认插件目录不可写时，请设置可写目录，尤其是容器或系统级安装环境；容器建议挂载该目录，升级插件前也建议备份本地图片。图库若将来变化，需要维护者同步更新并发布索引。
+
+完全离线使用已有图片：
+
+```dotenv
+LONGTU_MODE=local
+LONGTU_LOCAL_DIR="./data/longtu"
+LONGTU_AUTO_DOWNLOAD=false
+LONGTU_REMOTE_FALLBACK=false
+```
+
+### 纯远程模式
+
+```dotenv
+LONGTU_MODE=remote
+```
+
+此模式使用插件内置清单，每次下载图片字节发送，不创建本地图片目录，不运行后台补库；更新内置清单随插件升级。它仍依赖 GitHub 网络，网络较差时建议使用默认本地模式。
+
+两种模式都发送图片字节，适用于 NoneBot 与 OneBot 协议端位于不同机器的环境，不要求协议端能访问 NoneBot 的本地路径。
 
 ## 🎉 使用
 
@@ -138,6 +183,11 @@ dragon，龙龙，龙图：发送一张可爱的龙龙图片
 student_2333 (https://github.com/lgc2333) 的无私帮助。
 
 ## 📝 更新日志
+
+### 0.2.0
+- 支持本地、远程两种模式，默认本地优先，目录可配置。
+- 空闲时单文件渐进下载，已有图片可立即使用，支持重启续传，补齐后自动结束。
+- 内置真实图片清单，校验下载内容，限制请求等待，复用 HTTP 连接。
 
 ### 0.1.2
 - 龙库换源：将图片资源迁移到 GitHub Raw（Whiked/Dragonimg/drimg/），提升可用性与稳定性
