@@ -167,7 +167,7 @@ class ImageStore:
         if self.config.longtu_mode == "local":
             choices = list(set(self.local) - set(excluded)) or list(self.local)
             random.shuffle(choices)
-            for name in choices[:3]:
+            for name in choices:
                 try:
                     payload = await offload(read_image, self.local[name])
                     return name, payload
@@ -177,7 +177,8 @@ class ImageStore:
             if not self.config.longtu_remote_fallback:
                 raise ValueError("No local images available")
         choices = list(set(self.index) - set(excluded)) or list(self.index)
-        for name in random.sample(choices, min(3, len(choices))):
+        random.shuffle(choices)
+        for name in choices:
             try:
                 payload = await self._fetch(name)
             except (httpx.HTTPError, ValueError):
