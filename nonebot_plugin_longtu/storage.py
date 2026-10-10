@@ -164,28 +164,32 @@ class ImageStore:
         self.verified[name] = hashlib.sha1(f"blob {len(payload)}\0".encode() + payload).hexdigest()
 
     async def get_image(self, excluded=()):
-        if self.config.longtu_mode == "local":
-            choices = list(set(self.local) - set(excluded)) or list(self.local)
-            random.shuffle(choices)
-            for name in choices:
-                try:
-                    payload = await offload(read_image, self.local[name])
-                    return name, payload
-                except (OSError, ValueError):
-                    self.local.pop(name, None)
-                    self.verified.pop(name, None)
-            if not self.config.longtu_remote_fallback:
-                raise ValueError("No local images available")
-        choices = list(set(self.index) - set(excluded)) or list(self.index)
+        local_mode = self.config.longtu_mode == "local"
+        offline = local_mode and not self.config.longtu_remote_fallback
+        pool = self.local if offline else self.index
+        choices = list(set(pool) - set(excluded)) or list(pool)
         random.shuffle(choices)
         for name in choices:
+            if local_mode:
+                path = self.local.get(name)
+                if path is not None:
+                    try:
+                        payload = await offload(read_image, path)
+                        return name, payload
+                    except (OSError, ValueError):
+                        self.local.pop(name, None)
+                        self.verified.pop(name, None)
+                if offline:
+                    continue
             try:
                 payload = await self._fetch(name)
             except (httpx.HTTPError, ValueError):
                 continue
-            if self.config.longtu_mode == "local":
+            if local_mode:
                 await self._save(name, payload)
             return name, payload
+        if offline:
+            raise ValueError("No local images available")
         raise ValueError("No remote images available")
 
     async def _matches(self, name):

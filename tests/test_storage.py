@@ -62,6 +62,70 @@ class StorageTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse((self.path / NAME).exists())
         self.assertEqual(self.store.local, {})
 
+    async def test_sparse_cache_does_not_limit_candidate_pool(self):
+        names = [f"dragon_{i}_.gif" for i in range(4)]
+        self.store.index = dict.fromkeys(names, ENTRY)
+        await self.store._save(names[-1], IMAGE)
+        candidates = []
+        def ordered(items):
+            candidates.extend(items)
+            items.sort()
+        with patch.object(storage.random, "shuffle", side_effect=ordered), patch.object(self.store, "_fetch", new=AsyncMock(return_value=IMAGE)) as fetch:
+            self.assertEqual(await self.store.get_image(), (names[0], IMAGE))
+        self.assertCountEqual(candidates, names)
+        fetch.assert_awaited_once_with(names[0])
+        self.assertEqual((self.path / names[0]).read_bytes(), IMAGE)
+
+    async def test_selected_cached_image_does_not_use_network(self):
+        self.store.index["dragon_2_.gif"] = ENTRY
+        await self.store._save(NAME, IMAGE)
+        with patch.object(storage.random, "shuffle", side_effect=lambda items: items.sort()), patch.object(self.store, "_fetch", new=AsyncMock()) as fetch:
+            self.assertEqual(await self.store.get_image(), (NAME, IMAGE))
+        fetch.assert_not_awaited()
+
+    async def test_selected_stale_image_downloads_same_name(self):
+        other = "dragon_2_.gif"
+        self.store.index[other] = ENTRY
+        await self.store._save(other, IMAGE)
+        for damage in ("deleted", "corrupt"):
+            with self.subTest(damage=damage):
+                await self.store._save(NAME, IMAGE)
+                if damage == "deleted":
+                    (self.path / NAME).unlink()
+                else:
+                    (self.path / NAME).write_bytes(b"broken image")
+                with patch.object(storage.random, "shuffle", side_effect=lambda items: items.sort()), patch.object(self.store, "_fetch", new=AsyncMock(return_value=IMAGE)) as fetch:
+                    self.assertEqual(await self.store.get_image(), (NAME, IMAGE))
+                fetch.assert_awaited_once_with(NAME)
+                self.assertEqual((self.path / NAME).read_bytes(), IMAGE)
+
+    async def test_failed_remote_candidate_can_fall_through_to_cached_image(self):
+        other = "dragon_2_.gif"
+        self.store.index[other] = ENTRY
+        await self.store._save(other, IMAGE)
+        with patch.object(storage.random, "shuffle", side_effect=lambda items: items.sort()), patch.object(self.store, "_fetch", new=AsyncMock(side_effect=httpx.ConnectError("offline"))) as fetch:
+            self.assertEqual(await self.store.get_image(), (other, IMAGE))
+        fetch.assert_awaited_once_with(NAME)
+
+    async def test_offline_sparse_cache_excludes_uncached_index_entries(self):
+        self.config.longtu_remote_fallback = False
+        names = [f"dragon_{i}_.gif" for i in range(4)]
+        self.store.index = dict.fromkeys(names, ENTRY)
+        await self.store._save(names[-1], IMAGE)
+        candidates = []
+        with patch.object(storage.random, "shuffle", side_effect=lambda items: candidates.extend(items)), patch.object(self.store, "_fetch", new=AsyncMock()) as fetch:
+            self.assertEqual(await self.store.get_image(), (names[-1], IMAGE))
+        self.assertEqual(candidates, [names[-1]])
+        fetch.assert_not_awaited()
+
+    async def test_remote_mode_ignores_existing_local_cache(self):
+        await self.store._save(NAME, IMAGE)
+        self.config.longtu_mode = "remote"
+        with patch.object(self.store, "_fetch", new=AsyncMock(return_value=IMAGE)) as fetch, patch.object(self.store, "_save", new=AsyncMock()) as save:
+            self.assertEqual(await self.store.get_image(), (NAME, IMAGE))
+        fetch.assert_awaited_once_with(NAME)
+        save.assert_not_awaited()
+
     async def test_remote_start_does_not_create_directory_or_worker(self):
         cfg = Config(longtu_mode="remote", longtu_local_dir=self.path / "absent")
         other = storage.ImageStore(cfg)
