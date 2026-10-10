@@ -95,6 +95,81 @@ class StorageTests(unittest.IsolatedAsyncioTestCase):
             await self.store.get_image()
         self.assertEqual(len(self.calls), 1)
 
+    async def test_offline_tries_remaining_local_candidates(self):
+        self.config.longtu_remote_fallback = False
+        names = [f"dragon_{i}_.gif" for i in range(4)]
+        self.store.index = dict.fromkeys(names, ENTRY)
+        for name in names:
+            await self.store._save(name, IMAGE)
+        (self.path / names[0]).unlink()
+        (self.path / names[1]).write_bytes(b"broken image")
+        (self.path / names[2]).unlink()
+        with patch.object(storage.random, "shuffle", side_effect=lambda items: items.sort()), patch.object(self.store, "_fetch", new=AsyncMock()) as fetch:
+            self.assertEqual(await self.store.get_image(), (names[3], IMAGE))
+        fetch.assert_not_awaited()
+        self.assertEqual(set(self.store.local), {names[3]})
+        self.assertEqual(set(self.store.verified), {names[3]})
+
+    async def test_remote_tries_remaining_candidates(self):
+        names = [f"dragon_{i}_.gif" for i in range(4)]
+        self.store.index = dict.fromkeys(names, ENTRY)
+        await self.store.client.aclose()
+        def respond(request):
+            name = request.url.path.rsplit("/", 1)[-1]
+            self.calls.append(name)
+            if name == names[0]:
+                return httpx.Response(404)
+            if name == names[1]:
+                return httpx.Response(200, content=b"GIF89a" + b"1" * 30)
+            if name == names[2]:
+                raise httpx.ReadTimeout("timeout", request=request)
+            return httpx.Response(200, content=IMAGE)
+        self.store.client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+        for mode in ("remote", "local"):
+            with self.subTest(mode=mode):
+                self.config.longtu_mode = mode
+                self.calls.clear()
+                with patch.object(storage.random, "shuffle", side_effect=lambda items: items.sort()):
+                    self.assertEqual(await self.store.get_image(), (names[3], IMAGE))
+                self.assertEqual(self.calls, names)
+                self.assertEqual((self.path / names[3]).exists(), mode == "local")
+
+    async def test_remote_exhausts_candidates_once_without_repeating_excluded(self):
+        self.config.longtu_mode = "remote"
+        names = [f"dragon_{i}_.gif" for i in range(6)]
+        self.store.index = dict.fromkeys(names, ENTRY)
+        with patch.object(self.store, "_fetch", new=AsyncMock(side_effect=httpx.ConnectError("offline"))) as fetch:
+            with self.assertRaisesRegex(ValueError, "No remote images available"):
+                await self.store.get_image({names[0]})
+        attempted = [call.args[0] for call in fetch.await_args_list]
+        self.assertCountEqual(attempted, names[1:])
+
+    async def test_candidates_respect_exclusions_and_allow_reuse_when_exhausted(self):
+        names = [f"dragon_{i}_.gif" for i in range(5)]
+        self.store.index = dict.fromkeys(names, ENTRY)
+        for name in names:
+            await self.store._save(name, IMAGE)
+        for mode in ("local", "remote"):
+            with self.subTest(mode=mode):
+                self.config.longtu_mode = mode
+                with patch.object(self.store, "_fetch", new=AsyncMock(return_value=IMAGE)):
+                    selected, _ = await self.store.get_image(set(names[:-1]))
+                    self.assertEqual(selected, names[-1])
+                    selected, _ = await self.store.get_image(set(names))
+                    self.assertIn(selected, names)
+
+    async def test_offline_exhausts_and_removes_invalid_candidates(self):
+        self.config.longtu_remote_fallback = False
+        names = [f"dragon_{i}_.gif" for i in range(5)]
+        self.store.local = {name: self.path / name for name in names}
+        self.store.verified = dict.fromkeys(names, ENTRY["sha"])
+        with patch.object(self.store, "_fetch", new=AsyncMock()) as fetch:
+            with self.assertRaisesRegex(ValueError, "No local images available"):
+                await self.store.get_image()
+        self.assertEqual(self.store.local, {})
+        self.assertEqual(self.store.verified, {})
+        fetch.assert_not_awaited()
+
     async def test_resume_scans_existing_and_ignores_partial(self):
         (self.path / NAME).write_bytes(IMAGE)
         (self.path / "unfinished.gif.part").write_bytes(IMAGE)
